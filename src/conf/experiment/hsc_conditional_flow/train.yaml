@@ -1,0 +1,30 @@
+# @package _global_
+
+defaults:
+- /data/hsc_embeddings
+- /trainer/gpu
+- /logger/wandb
+- /logger/csv
+- /paths/default
+- /hydra/default
+- model
+- sweeps
+- meta
+- _self_
+
+data:
+  params: []
+  #loader:
+    #datasets:
+      #embedding_dset_name: "spender_I_alpha_flow-0"
+
+hydra:
+  sweeper:
+    params:
+      +seed: ${....sweeps.seeds.0} #, ${....sweeps.seeds.1}, ${....sweeps.seeds.2}
+      ++data.embed_type: ${....sweeps.embed_type.0}, ${....sweeps.embed_type.1} #, ${....sweeps.embed_type.2}
+      #++data.params: ${....sweeps.params.0} #, ${....sweeps.embed_type.1}, ${....sweeps.embed_type.2}
+
+trainer:
+  max_epochs: 50
+  log_every_n_steps: 50
