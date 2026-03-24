@@ -1,0 +1,102 @@
+import logging
+from pathlib import Path
+
+import hydra
+from hydra.core.global_hydra import GlobalHydra
+from lightning.pytorch import seed_everything
+import pyarrow as pa
+import pyarrow.parquet as pq
+
+from wwdc_redshift_catastrophic_outliers.inference.modules import create_lightning_loader
+
+log = logging.getLogger(__name__)
+
+
+@hydra.main(
+    version_base=None,
+    config_path="../../conf",
+    config_name="experiment/hsc_conditional_flow/embed",
+)
+def main(cfg):
+    """The main inference function."""
+    seed_everything(cfg.seed, workers=True)
+
+    try:
+        data = hydra.utils.instantiate(cfg.data.loader)
+        data.setup()
+        split_dataloaders = {
+            "test": {"loader": data.test_dataloader, "call": False},
+            "train": {"loader": data.train_dataloader, "call": False},
+            "val": {"loader": data.val_dataloader, "call": False},
+        }
+
+        for split in cfg.splits:
+            split_dataloaders[split]["dataloader"] = split_dataloaders[split][
+                "loader"
+            ]()
+            split_dataloaders[split]["call"] = True
+
+        msg = f"Data loaders instantiated: {split_dataloaders!s}"
+        log.info(msg)
+
+    except Exception as e:
+        msg = f"Error instantiating data loaders: {e}"
+        log.error(msg)
+        raise e
+
+    try:
+        cfg, model_id, job_id = create_lightning_loader(cfg)
+        print(f"cfg: {cfg}. Model ID: {model_id}. Job ID: {job_id}")
+        lightning_loader = hydra.utils.instantiate(cfg.lightning_loader)
+        print(lightning_loader)
+        msg = "Lightning loader instantiated."
+        log.info(msg)
+    except Exception as e:
+        msg = f"Error instantiating lightning loader: {e}"
+        log.error(msg)
+        raise e
+
+    for name, split in split_dataloaders.items():
+        if split["call"]:
+            for idx, batch in enumerate(split["dataloader"]):
+                if (cfg.batch_limit is not None):
+                    if idx >= cfg.batch_limit:
+                        break
+                try:
+                    # need to add embed_opt to the config.
+                    X, y, _id, ra, dec, z, mask_ratio = batch
+                    predictions = lightning_loader.predict_step(
+                        X=X, y=y, embed_opt=cfg.embed_opt
+                    )
+
+                    data = {k: v.tolist() for k, v in predictions.items()}
+
+                    '''
+                    # TO-DO - add task specific values here.
+                    data["id"] = _id
+                    # positional info
+                    data["z"] = z.tolist()
+                    data["ra"] = ra.tolist()
+                    data["dec"] = dec.tolist()
+                    data["mask_ratio"] = mask_ratio.tolist()
+                    '''
+
+                    path = Path(cfg.paths.embed_dir + f"{model_id}/{name}/")
+                    if not path.exists():
+                        path.mkdir(parents=True, exist_ok=True)
+
+                    pq.write_table(pa.table(data), path / f"{idx}.parquet")
+
+                except Exception as e:
+                    msg = f"Error creating embeddings: {e}"
+                    log.error(msg)
+                    raise e
+                
+                # potentially - add to HF from here.
+
+    log.info("Inference complete.")
+    return
+
+if __name__ == "__main__":
+    GlobalHydra.instance().clear()
+    main()
