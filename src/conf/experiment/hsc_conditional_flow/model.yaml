@@ -1,6 +1,6 @@
 code_dim: 32
 lightning_loader:
-  _target_: wwdc_spectra.models.flow.LightningFlowMatching
+  _target_: wwdc_redshift_catastrophic_outliers.models.flow.LightningFlowMatching
   lr: 0.0001
   code_dim: ${code_dim}
   hidden_dim: 256

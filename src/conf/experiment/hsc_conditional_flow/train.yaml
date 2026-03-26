@@ -12,17 +12,10 @@ defaults:
 - meta
 - _self_
 
-data:
-  params: []
-  #loader:
-    #datasets:
-      #embedding_dset_name: "spender_I_alpha_flow-0"
-
 hydra:
   sweeper:
     params:
       +seed: ${....sweeps.seeds.0} #, ${....sweeps.seeds.1}, ${....sweeps.seeds.2}
-      ++data.embed_type: ${....sweeps.embed_type.0}, ${....sweeps.embed_type.1} #, ${....sweeps.embed_type.2}
       #++data.params: ${....sweeps.params.0} #, ${....sweeps.embed_type.1}, ${....sweeps.embed_type.2}
 
 trainer:

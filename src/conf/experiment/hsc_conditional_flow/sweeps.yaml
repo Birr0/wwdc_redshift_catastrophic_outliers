@@ -3,9 +3,5 @@ sweeps:
     - 42
     - 43
     - 44
-  embed_type:
-    - "orig"
-    - "cond"
-    - "uncond"
   params: 
     - []

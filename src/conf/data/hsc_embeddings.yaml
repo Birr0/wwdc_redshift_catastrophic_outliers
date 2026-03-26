@@ -1,0 +1,54 @@
+x_ds:
+  dataset_name: "hsc_embeddings"
+  fp: ${meta.data_path}
+  type: "image_emebedding"
+  size: [32]
+
+y_catalog:
+  catalog_name: "hsc_embeddings"
+  fp: null
+  join_method: "concat"
+  variables:
+    g_cmodel_mag:
+      name: "g_cmodel_mag"
+      size: 1
+      processing_fn: null
+    r_cmodel_mag:
+      name: "r_cmodel_mag"
+      size: 1
+      processing_fn: null
+    i_cmodel_mag:
+      name: "i_cmodel_mag"
+      size: 1
+      processing_fn: null
+    z_cmodel_mag:
+      name: "z_cmodel_mag"
+      size: 1
+      processing_fn: null
+    y_cmodel_mag:
+      name: "y_cmodel_mag"
+      size: 1
+      processing_fn: null
+  drop_variables: []
+
+loader:
+  _target_: wwdc_redshift_catastrophic_outliers.data.hsc_embeddings.EmbeddingDataLoader
+  datasets:
+    train:
+      _target_: wwdc_redshift_catastrophic_outliers.data.hsc_embeddings.EmbeddingDataset
+      split: "train"
+      y_catalog: ${....y_catalog}
+    test:
+      _target_: wwdc_redshift_catastrophic_outliers.data.hsc_embeddings.EmbeddingDataset
+      split: "test"
+      y_catalog: ${....y_catalog}
+    val:
+      _target_: wwdc_redshift_catastrophic_outliers.data.hsc_embeddings.EmbeddingDataset
+      split: "val"
+      y_catalog: ${....y_catalog}
+  batch_size: 256
+  random_state: ${seed}
+  shuffle: true
+  num_workers: null # dynamically set in the python file
+
+model_id: null  ## populate in code
