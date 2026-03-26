@@ -158,7 +158,7 @@ class LightningFlowMatching(L.LightningModule):
 
 
     def base_step(self, batch, partition):
-        X, y = batch
+        X, y, _ = batch
 
         x_0 = torch.randn_like(X)
         t = torch.rand(X.shape[0], device=X.device)
@@ -191,15 +191,14 @@ class LightningFlowMatching(L.LightningModule):
         self.eval()
         with torch.no_grad():
             output = {}
-            code = self.base_model.encode(X)
+
             if "orig" in embed_opt:
-                output["orig"] = code
-            
-            
+                output["orig"] = X
+        
             # could reduce this to a single forward pass.
             if "cond" in embed_opt:
                 output["cond"] = self.solver.sample(
-                    x_init=code,
+                    x_init=X,
                     step_size=self.step_size,
                     y=y,
                     cfg_scale=1.0,
@@ -209,7 +208,7 @@ class LightningFlowMatching(L.LightningModule):
 
             if "uncond" in embed_opt:
                 output["uncond"] = self.solver.sample(
-                    x_init=code,
+                    x_init=X,
                     step_size=self.step_size,
                     y=y,
                     cfg_scale=0.0,
