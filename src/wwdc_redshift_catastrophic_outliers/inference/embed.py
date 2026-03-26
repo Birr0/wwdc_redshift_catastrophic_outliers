@@ -64,22 +64,12 @@ def main(cfg):
                         break
                 try:
                     # need to add embed_opt to the config.
-                    X, y, _id, ra, dec, z, mask_ratio = batch
+                    X, y, z = batch
                     predictions = lightning_loader.predict_step(
                         X=X, y=y, embed_opt=cfg.embed_opt
                     )
 
                     data = {k: v.tolist() for k, v in predictions.items()}
-
-                    '''
-                    # TO-DO - add task specific values here.
-                    data["id"] = _id
-                    # positional info
-                    data["z"] = z.tolist()
-                    data["ra"] = ra.tolist()
-                    data["dec"] = dec.tolist()
-                    data["mask_ratio"] = mask_ratio.tolist()
-                    '''
 
                     path = Path(cfg.paths.embed_dir + f"{model_id}/{name}/")
                     if not path.exists():
