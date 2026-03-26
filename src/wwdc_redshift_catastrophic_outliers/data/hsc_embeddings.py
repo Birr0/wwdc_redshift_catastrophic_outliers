@@ -15,7 +15,6 @@ load_dotenv()
 DATA_ROOT = os.getenv("DATA_ROOT")
 
 bands = ["g", "r", "i", "z", "y"]
-params=["g_cmodel_mags", "r_cmodel_mags", "i_cmodel_mags", "z_cmodel_mags", "y_cmodel_mags"]
 
 class EmbeddingDataset(Dataset):
     def __init__(
@@ -104,11 +103,6 @@ if __name__ == "__main__":
         "variables": {
             "g_cmodel_mag": {
                 "name": "g mag",
-                "size": 1,
-                "processing_fn": None,
-            },
-            "r_cmodel_mag": {
-                "name": "r mag",
                 "size": 1,
                 "processing_fn": None,
             },
